@@ -62,7 +62,7 @@ with col2:
 
 # Validation warning
 if source_lang == target_lang:
-    st.warning("⚠️ សូ���ជ្រើសរើសភាសាខុសគ្នា")
+    st.warning("⚠️ សូមជ្រើសរើសភាសាខុសគ្នា")
 
 # Translation button
 st.markdown("---")
