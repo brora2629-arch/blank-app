@@ -51,18 +51,18 @@ with col2:
         index=0
     )
     
-    # Ensure source and target are different
-    if source_lang == target_lang:
-        st.warning("⚠️ សូមជ្រើសរើសភាសាខុសគ្នា")
-        translated_text = ""
-    else:
-        translated_text = st.text_area(
-            "ផលលទ្ធិបកប្រែ:",
-            height=250,
-            disabled=True,
-            value="",
-            key="output"
-        )
+    # Output area
+    translated_text = st.text_area(
+        "ផលលទ្ធិបកប្រែ:",
+        height=250,
+        disabled=True,
+        value=st.session_state.get("translated_result", ""),
+        key="output"
+    )
+
+# Validation warning
+if source_lang == target_lang:
+    st.warning("⚠️ សូ���ជ្រើសរើសភាសាខុសគ្នា")
 
 # Translation button
 st.markdown("---")
@@ -82,22 +82,25 @@ with col2:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     
-                    # Create translation prompt
+                    # Create translation prompt with proper language mapping
                     lang_map = {
-                        "ចិន (Chinese)": "ចិន",
-                        "ខ្មែរ (Khmer)": "ខ្មែរ",
-                        "ឧទ្ធម្ភាគ (English)": " английский"
+                        "ចិន (Chinese)": "Chinese",
+                        "ខ្មែរ (Khmer)": "Khmer",
+                        "ឧទ្ធម្ភាគ (English)": "English"
                     }
                     
                     source = lang_map.get(source_lang, source_lang)
                     target = lang_map.get(target_lang, target_lang)
                     
-                    prompt = f"បកប្រែអត្ថបទខាងក្រោមពី{source}ទៅ{target}ដោយរក្សារ័ស្មីយ៉ាងលម្អិត។ ផ្តល់តែការបកប្រែប៉ុណ្ណោះដោយមិនមានការពន្យល់លម្អិត៖\n\n{source_text}"
+                    prompt = f"Translate the following text from {source} to {target} while preserving the original meaning, tone, and style. Do not add any additional commentary or explanations.\n\nText to translate:\n{source_text}"
                     
                     response = model.generate_content(prompt)
                     translation = response.text
                     
-                    # Save to history (in session state)
+                    # Save to session state for display
+                    st.session_state.translated_result = translation
+                    
+                    # Save to history
                     if 'history' not in st.session_state:
                         st.session_state.history = []
                     
@@ -111,16 +114,7 @@ with col2:
                     
                     # Display result
                     st.success("✅ បកប្រែបានដោះស្រាយ!")
-                    st.text_area(
-                        "ផលលទ្ធិ:",
-                        value=translation,
-                        height=250,
-                        disabled=True,
-                        key="result"
-                    )
-                    
-                    # Copy button
-                    st.write(translation)
+                    st.rerun()
                     
                 except genai.types.APIError as e:
                     st.error(f"❌ កំហុស API: {str(e)}")
